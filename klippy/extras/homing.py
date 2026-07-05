@@ -353,6 +353,20 @@ class PrinterHoming:
                     "Homing failed due to printer shutdown")
             self.printer.lookup_object('stepper_enable').motor_off()
             raise
+    def HOMEXY(self):
+        # Move to origin
+        axes = [0, 1]
+        homing_state = Homing(self.printer)
+        homing_state.set_axes(axes)
+        kin = self.printer.lookup_object('toolhead').get_kinematics()
+        try:
+            kin.home(homing_state)
+        except self.printer.command_error:
+            if self.printer.is_shutdown():
+                raise self.printer.command_error(
+                    "Homing failed due to printer shutdown")
+            self.printer.lookup_object('stepper_enable').motor_off()
+            raise
 
 def load_config(config):
     return PrinterHoming(config)
