@@ -790,6 +790,7 @@ class MCUConnectHelper:
                     or self._serialport.startswith("/tmp/klipper_host_")):
                 self._baud = config.getint('baud', 250000, minval=2400)
         # Shutdown tracking
+        self._noncritical = config.getboolean('noncritical', False)
         self._emergency_stop_cmd = None
         self._is_shutdown = self._is_timeout = False
         self._shutdown_msg = ""
@@ -901,8 +902,9 @@ class MCUConnectHelper:
         self._is_timeout = True
         logging.info("Timeout with MCU '%s' (eventtime=%f)",
                      self._name, eventtime)
-        self._printer.invoke_shutdown("Lost communication with MCU '%s'" % (
-            self._name,))
+        if (not self._noncritical):
+            self._printer.invoke_shutdown("Lost communication with MCU '%s'" % (
+                self._name,))
     def is_shutdown(self):
         return self._is_shutdown
     def get_shutdown_msg(self):
