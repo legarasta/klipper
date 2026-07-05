@@ -13,7 +13,7 @@ class QueueHandler(logging.Handler):
     def emit(self, record):
         try:
             self.format(record)
-            record.msg = record.message
+            record.msg = "%s : %s" % (time.asctime(),record.message)
             record.args = None
             record.exc_info = None
             self.queue.put_nowait(record)
