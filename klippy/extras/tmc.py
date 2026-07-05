@@ -117,11 +117,12 @@ class TMCErrorCheck:
             cs_actual_mask = self.fields.all_fields[reg_name]["se"]
         err_fields = ["ot", "s2ga", "s2gb", "s2vsa", "s2vsb"]
         warn_fields = ["otpw", "t120", "t143", "t150", "t157"]
-        for f in err_fields + warn_fields:
-            if f in self.fields.all_fields[reg_name]:
-                mask |= self.fields.all_fields[reg_name][f]
-                if f in err_fields:
-                    err_mask |= self.fields.all_fields[reg_name][f]
+        # Attempt to disable trinamic checks during operation (causes powerloss issues)
+        #for f in err_fields + warn_fields:
+        #    if f in self.fields.all_fields[reg_name]:
+        #        mask |= self.fields.all_fields[reg_name][f]
+        #        if f in err_fields:
+        #            err_mask |= self.fields.all_fields[reg_name][f]
         self.drv_status_reg_info = [0, reg_name, mask, err_mask, cs_actual_mask]
         # Setup for temperature query
         self.adc_temp = None
@@ -161,8 +162,8 @@ class TMCErrorCheck:
             count += 1
             if count >= 3:
                 fmt = self.fields.pretty_format(reg_name, val)
-                raise self.printer.command_error("TMC '%s' reports error: %s"
-                                                 % (self.stepper_name, fmt))
+                #raise self.printer.command_error("TMC '%s' reports error: %s"
+                #                                 % (self.stepper_name, fmt))
             if try_clear and val & err_mask:
                 try_clear = False
                 cleared_flags |= val & err_mask

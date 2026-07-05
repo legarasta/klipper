@@ -206,6 +206,9 @@ class Printer:
             return
         logging.error("Transition to shutdown state: %s", msg)
         self.in_shutdown_state = True
+
+        self.lookup_object('powerloss').powerloss_save()
+
         self._set_state(msg)
         with self.reactor.assert_no_pause():
             for cb in self.event_handlers.get("klippy:shutdown", []):

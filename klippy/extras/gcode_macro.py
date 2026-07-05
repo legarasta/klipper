@@ -187,8 +187,6 @@ class GCodeMacro:
         v[variable] = literal
         self.variables = v
     def cmd(self, gcmd):
-        if self.in_script:
-            raise gcmd.error("Macro %s called recursively" % (self.alias,))
         kwparams = dict(self.variables)
         kwparams.update(self.template.create_template_context())
         kwparams['params'] = gcmd.get_command_parameters()

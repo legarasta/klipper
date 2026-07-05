@@ -121,6 +121,9 @@ class BedMesh:
         self.gcode.register_command(
             'BED_MESH_OFFSET', self.cmd_BED_MESH_OFFSET,
             desc=self.cmd_BED_MESH_OFFSET_help)
+        self.gcode.register_command(
+            'BED_MESH_STATUS_UPDATE', self.cmd_BED_MESH_STATUS_UPDATE,
+            desc=self.cmd_BED_MESH_OFFSET_help)
         # Register dump webhooks
         webhooks = self.printer.lookup_object('webhooks')
         webhooks.register_endpoint(
@@ -235,6 +238,10 @@ class BedMesh:
             "mesh_max": (0., 0.),
             "probed_matrix": [[]],
             "mesh_matrix": [[]],
+            "last_z_correction": [0.],
+            "last_z_correction_x": [0.],
+            "last_z_correction_y": [0.],
+            "last_z_correction_z": [0.],
             "profiles": self.pmgr.get_profiles()
         }
         if self.z_mesh is not None:
@@ -248,6 +255,22 @@ class BedMesh:
             self.status['mesh_max'] = mesh_max
             self.status['probed_matrix'] = probed_matrix
             self.status['mesh_matrix'] = mesh_matrix
+
+            last_position = self.get_position()
+            #gcode_move = self.printer.lookup_object("gcode_move")
+            #x = gcode_move.gcode_position.x
+            #y = gcode_move.gcode_position.y
+            #z = gcode_move.gcode_position.z
+            x = last_position[0]
+            y = last_position[1]
+            z = last_position[2]
+
+            #gcode_move.gcode_position.x
+            self.status['last_z_correction'] = self.z_mesh.calc_z(x, y)
+            self.status['last_z_correction_x'] = x
+            self.status['last_z_correction_y'] = y
+            self.status['last_z_correction_z'] = z
+            
     def get_mesh(self):
         return self.z_mesh
     cmd_BED_MESH_OUTPUT_help = "Retrieve interpolated grid of probed z-points"
@@ -288,6 +311,10 @@ class BedMesh:
             gcode_move.reset_last_position()
         else:
             gcmd.respond_info("No mesh loaded to offset")
+    cmd_BED_MESH_STATUS_UPDATE_help = "Forces an update to bed mesh status"
+    def cmd_BED_MESH_STATUS_UPDATE(self, gcmd):
+        self.update_status()
+    
     def _handle_dump_request(self, web_request):
         eventtime = self.printer.get_reactor().monotonic()
         prb = self.printer.lookup_object("probe", None)
