@@ -226,8 +226,11 @@ class Powerloss:
         #self.gcode.respond_raw("Extruder temp before: "+ str(extruder_temp))
 
         # If extruder temp is set to zero it means that timeout has occured so read the restore temp
-        if(extruder_temp == 0):
-            extruder_temp = dict(self.printer.lookup_object('gcode_macro RESUME').variables)["extruder_temp"]
+        try:
+            if(extruder_temp == 0):
+                extruder_temp = dict(self.printer.lookup_object('gcode_macro RESUME').variables)["extruder_temp"]
+        except:
+            pass
 
         #self.gcode.respond_raw("Extruder temp after : "+ str(extruder_temp))
 
@@ -296,7 +299,11 @@ class Powerloss:
         SFS_T4           = check_filament_sensor('SFS_T4')
         SFS_T4_SW        = check_filament_sensor('SFS_T4_SW')
 
-        multiply         = dict(self.printer.lookup_object('gcode_macro Disable_Multiplication').variables)["multiplication_state"]
+        try:
+            multiply         = dict(self.printer.lookup_object('gcode_macro Disable_Multiplication').variables)["multiplication_state"]
+        except:
+            multiply         = 'NA'
+        
 
         def write_powerloss_file(in_file):
             to_write = open(in_file, "w")
@@ -609,27 +616,29 @@ class Powerloss:
                 pheaters.set_temperature(self.printer.lookup_object('heater_generic Bed_4'), bed_set_temp, False)
  
         # Reinstate multiply state
-        v = dict(self.printer.lookup_object('gcode_macro Disable_Multiplication').variables)
-        v["multiplication_state"] = int(multiply)
-        self.printer.lookup_object('gcode_macro Disable_Multiplication').variables = v
+        if (multiply != 'NA'):
+            v = dict(self.printer.lookup_object('gcode_macro Disable_Multiplication').variables)
+            v["multiplication_state"] = int(multiply)
+            self.printer.lookup_object('gcode_macro Disable_Multiplication').variables = v
         
         # Set extruder temp to 160ºC
         extruder_heater = self.printer.lookup_object('toolhead').get_extruder().get_heater()
         pheaters.set_temperature(extruder_heater, 160.0, False)
 
-        # Set temps for the other extruder if multiply is on
-        if int(multiply) >= 1:
-            extruder1_heater = self.printer.lookup_object('extruder1').get_heater()
-            pheaters.set_temperature(extruder1_heater, 160, False)
-        if int(multiply) >= 2:
-            extruder2_heater = self.printer.lookup_object('extruder2').get_heater()
-            pheaters.set_temperature(extruder2_heater, 160, False)
-        if int(multiply) >= 3:
-            extruder3_heater = self.printer.lookup_object('extruder3').get_heater()
-            pheaters.set_temperature(extruder3_heater, 160, False)
-        if int(multiply) >= 4:
-            extruder4_heater = self.printer.lookup_object('extruder4').get_heater()
-            pheaters.set_temperature(extruder4_heater, 160, False)
+        if (multiply != 'NA'):
+            # Set temps for the other extruder if multiply is on
+            if int(multiply) >= 1:
+                extruder1_heater = self.printer.lookup_object('extruder1').get_heater()
+                pheaters.set_temperature(extruder1_heater, 160, False)
+            if int(multiply) >= 2:
+                extruder2_heater = self.printer.lookup_object('extruder2').get_heater()
+                pheaters.set_temperature(extruder2_heater, 160, False)
+            if int(multiply) >= 3:
+                extruder3_heater = self.printer.lookup_object('extruder3').get_heater()
+                pheaters.set_temperature(extruder3_heater, 160, False)
+            if int(multiply) >= 4:
+                extruder4_heater = self.printer.lookup_object('extruder4').get_heater()
+                pheaters.set_temperature(extruder4_heater, 160, False)
 
         # Set fan speed
         value = float(fan_speed) / 255.
@@ -645,14 +654,15 @@ class Powerloss:
         # Wait for extruder to reach above 160ºC
         wait_for_extruder_temp(160.0,extruder_heater)
 
-        if int(multiply) >= 1:
-            wait_for_extruder_temp(160.0,extruder1_heater," 1")
-        if int(multiply) >= 2:
-            wait_for_extruder_temp(160.0,extruder2_heater," 2")
-        if int(multiply) >= 3:
-            wait_for_extruder_temp(160.0,extruder3_heater," 3")
-        if int(multiply) >= 4:
-            wait_for_extruder_temp(160.0,extruder4_heater," 4")
+        if (multiply != 'NA'):
+            if int(multiply) >= 1:
+                wait_for_extruder_temp(160.0,extruder1_heater," 1")
+            if int(multiply) >= 2:
+                wait_for_extruder_temp(160.0,extruder2_heater," 2")
+            if int(multiply) >= 3:
+                wait_for_extruder_temp(160.0,extruder3_heater," 3")
+            if int(multiply) >= 4:
+                wait_for_extruder_temp(160.0,extruder4_heater," 4")
 
         # Wait two seconds and re-check to avoid false positives caused by 
         reactor = self.printer.get_reactor()
@@ -719,29 +729,33 @@ class Powerloss:
         pheaters.set_temperature(extruder_heater, float(extruder_temp), False)
 
         # Set temps for the other extruder if multiply is on
-        if int(multiply) >= 1:
-            extruder1 = self.printer.lookup_object('extruder1')
-            pheaters.set_temperature(extruder1.get_heater(), float(extruder_temp), False)
-        if int(multiply) >= 2:
-            extruder2 = self.printer.lookup_object('extruder2')
-            pheaters.set_temperature(extruder2.get_heater(), float(extruder_temp), False)
-        if int(multiply) >= 3:
-            extruder3 = self.printer.lookup_object('extruder3')
-            pheaters.set_temperature(extruder3.get_heater(), float(extruder_temp), False)
-        if int(multiply) >= 4:
-            extruder4 = self.printer.lookup_object('extruder4')
-            pheaters.set_temperature(extruder4.get_heater(), float(extruder_temp), False)
+        if (multiply != 'NA'):
+            if int(multiply) >= 1:
+                extruder1 = self.printer.lookup_object('extruder1')
+                pheaters.set_temperature(extruder1.get_heater(), float(extruder_temp), False)
+            if int(multiply) >= 2:
+                extruder2 = self.printer.lookup_object('extruder2')
+                pheaters.set_temperature(extruder2.get_heater(), float(extruder_temp), False)
+            if int(multiply) >= 3:
+                extruder3 = self.printer.lookup_object('extruder3')
+                pheaters.set_temperature(extruder3.get_heater(), float(extruder_temp), False)
+            if int(multiply) >= 4:
+                extruder4 = self.printer.lookup_object('extruder4')
+                pheaters.set_temperature(extruder4.get_heater(), float(extruder_temp), False)
 
         # Wait for print temp
         wait_for_extruder_temp(float(extruder_temp),extruder_heater,"")
-        if int(multiply) >= 1:
-            wait_for_extruder_temp(float(extruder_temp),extruder1_heater," 1")
-        if int(multiply) >= 2:
-            wait_for_extruder_temp(float(extruder_temp),extruder2_heater," 2")
-        if int(multiply) >= 3:
-            wait_for_extruder_temp(float(extruder_temp),extruder3_heater," 3")
-        if int(multiply) >= 4:
-            wait_for_extruder_temp(float(extruder_temp),extruder4_heater," 4")
+
+        if (multiply != 'NA'):
+            if int(multiply) >= 1:
+                wait_for_extruder_temp(float(extruder_temp),extruder1_heater," 1")
+            if int(multiply) >= 2:
+                wait_for_extruder_temp(float(extruder_temp),extruder2_heater," 2")
+            if int(multiply) >= 3:
+                wait_for_extruder_temp(float(extruder_temp),extruder3_heater," 3")
+            if int(multiply) >= 4:
+                wait_for_extruder_temp(float(extruder_temp),extruder4_heater," 4")
+
         if float(bed_temp) > 0:
             wait_for_bed_temp(float(bed_temp))
 
@@ -758,18 +772,19 @@ class Powerloss:
         restore_filament_sensor("SFS_T4_SW",SFS_T4_SW)
 
         # Enable extruder sync according to multiply
-        if int(multiply) >= 1:
-            self.printer.lookup_object('extruder1').extruder_stepper.sync_to_extruder("extruder")
-            self.printer.lookup_object('extruder_stepper e2_aux').extruder_stepper.sync_to_extruder("extruder")
-        if int(multiply) >= 2:
-            self.printer.lookup_object('extruder2').extruder_stepper.sync_to_extruder("extruder")
-            self.printer.lookup_object('extruder_stepper e3_aux').extruder_stepper.sync_to_extruder("extruder")
-        if int(multiply) >= 3:
-            self.printer.lookup_object('extruder3').extruder_stepper.sync_to_extruder("extruder")
-            self.printer.lookup_object('extruder_stepper e4_aux').extruder_stepper.sync_to_extruder("extruder")
-        if int(multiply) >= 4:
-            self.printer.lookup_object('extruder4').extruder_stepper.sync_to_extruder("extruder")
-            self.printer.lookup_object('extruder_stepper e5_aux').extruder_stepper.sync_to_extruder("extruder")
+        if (multiply != 'NA'):
+            if int(multiply) >= 1:
+                self.printer.lookup_object('extruder1').extruder_stepper.sync_to_extruder("extruder")
+                self.printer.lookup_object('extruder_stepper e2_aux').extruder_stepper.sync_to_extruder("extruder")
+            if int(multiply) >= 2:
+                self.printer.lookup_object('extruder2').extruder_stepper.sync_to_extruder("extruder")
+                self.printer.lookup_object('extruder_stepper e3_aux').extruder_stepper.sync_to_extruder("extruder")
+            if int(multiply) >= 3:
+                self.printer.lookup_object('extruder3').extruder_stepper.sync_to_extruder("extruder")
+                self.printer.lookup_object('extruder_stepper e4_aux').extruder_stepper.sync_to_extruder("extruder")
+            if int(multiply) >= 4:
+                self.printer.lookup_object('extruder4').extruder_stepper.sync_to_extruder("extruder")
+                self.printer.lookup_object('extruder_stepper e5_aux').extruder_stepper.sync_to_extruder("extruder")
         
 
         # TODO: Check if Z offset should be compensated here??
