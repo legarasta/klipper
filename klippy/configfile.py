@@ -346,7 +346,7 @@ class ConfigAutoSave:
                     raise self.printer.command_error(msg)
     cmd_SAVE_CONFIG_help = "Overwrite config file and restart"
     def cmd_SAVE_CONFIG(self, gcmd):
-        cmd_SAVE_CONFIG_NORESTART(self, gcmd)
+        self.cmd_SAVE_CONFIG_NORESTART(gcmd)
         # Request a restart
         gcode = self.printer.lookup_object('gcode')
         gcode.request_restart('restart')
@@ -396,7 +396,7 @@ class ConfigAutoSave:
         # Create new config file with temporary name and swap with main config
         logging.info("SAVE_CONFIG to '%s' (backup in '%s')",
                      cfgname, backup_name)
-         try:
+        try:
             f = open(temp_name, 'w')
             f.write(data)
             f.close()
